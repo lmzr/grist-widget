@@ -457,9 +457,72 @@ input:checked + label {
   padding: 0px;
 }
 
-.toastui-calendar-week-view .toastui-calendar-holiday-sun,
-.toastui-calendar-day-view .toastui-calendar-holiday-sun {
+/* Weekend (Sunday) header colour is toggled by the "Neutralize weekends"
+   display option, which adds/removes the .neutral-weekends class on
+   #calendar-container.
+   - Default (no class): keep Grist's accented Sunday header.
+   - .neutral-weekends: Sunday header uses the regular text colour, like any
+     other day.
+   Known ToastUI limitation: in week/day view, ToastUI resolves the day-name
+   colour with "is Sunday" checked BEFORE "is past" (theme.common.holiday.color
+   wins over theme.week.pastDay.color). A *past* Sunday therefore keeps the
+   holiday/text colour instead of being greyed like other past days. This is
+   set inline by ToastUI at render time and cannot be fixed from CSS; we accept
+   it rather than post-processing every render. */
+#calendar-container:not(.neutral-weekends) .toastui-calendar-week-view .toastui-calendar-holiday-sun,
+#calendar-container:not(.neutral-weekends) .toastui-calendar-day-view .toastui-calendar-holiday-sun {
   color: var(--grist-theme-accent-text) !important;
+}
+
+#calendar-container.neutral-weekends .toastui-calendar-week-view .toastui-calendar-holiday-sun,
+#calendar-container.neutral-weekends .toastui-calendar-day-view .toastui-calendar-holiday-sun {
+  color: var(--grist-theme-text) !important;
+}
+
+/* Settings (gear) menu */
+#calendar-settings {
+  position: relative;
+  margin-left: auto;
+}
+
+#calendar-settings-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  margin-top: 4px;
+  padding: 8px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Final literal fallbacks keep the dropdown opaque and readable even if the
+     Grist theme variables are missing (e.g. before Grist injects them, or when
+     the widget is opened outside Grist). */
+  background-color: var(--grist-theme-menu-bg, var(--grist-theme-page-panels-main-panel-bg, #ffffff));
+  color: var(--grist-theme-menu-text, var(--grist-theme-text, #262633));
+  border: 1px solid var(--grist-theme-menu-border, var(--grist-theme-table-body-border, #d9d9d9));
+  border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+#calendar-settings-menu.hidden {
+  display: none;
+}
+
+#calendar-settings-menu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: normal;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#calendar-settings-menu input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
 }
 
 .toastui-calendar-template-popupDetailTitle {

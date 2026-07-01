@@ -45,6 +45,28 @@
             </label>
         </div>
         <time id="calendar-title"></time>
+        <div id="calendar-settings">
+            <button id="calendar-settings-button" class="btn btn-sm" type="button"
+                    data-i18n-title="Settings" title="Settings" onclick="toggleSettingsMenu()">&#9881;</button>
+            <div id="calendar-settings-menu" class="hidden">
+                <label>
+                    <input type="checkbox" value="accentToday" onchange="displayOptionChanged(this)">
+                    <span data-i18n="Accent today">Accent today</span>
+                </label>
+                <label>
+                    <input type="checkbox" value="neutralWeekends" onchange="displayOptionChanged(this)">
+                    <span data-i18n="Neutralize weekends">Neutralize weekends</span>
+                </label>
+                <label>
+                    <input type="checkbox" value="hideWeekendsWeek" onchange="displayOptionChanged(this)">
+                    <span data-i18n="Hide weekends (week view)">Hide weekends (week view)</span>
+                </label>
+                <label>
+                    <input type="checkbox" value="hideWeekendsMonth" onchange="displayOptionChanged(this)">
+                    <span data-i18n="Hide weekends (month view)">Hide weekends (month view)</span>
+                </label>
+            </div>
+        </div>
     </nav>
     <div id="calendar">
     </div>

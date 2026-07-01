@@ -28,5 +28,10 @@
   "Edit": "Edit",
   "Update": "Update",
   "Type": "type",
-  "event category and style": "Event category and style"
+  "event category and style": "Event category and style",
+  "Settings": "Settings",
+  "Accent today": "Accent today",
+  "Neutralize weekends": "Neutralize weekends",
+  "Hide weekends (week view)": "Hide weekends (week view)",
+  "Hide weekends (month view)": "Hide weekends (month view)"
 }
