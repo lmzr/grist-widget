@@ -28,5 +28,10 @@
     "calendar": "calendrier",
     "day": "jour",
     "today": "aujourd'hui",
-    "End Date": "date de fin"
+    "End Date": "date de fin",
+    "Settings": "Réglages",
+    "Accent today": "Accentuer aujourd'hui",
+    "Neutralize weekends": "Neutraliser les week-ends",
+    "Hide weekends (week view)": "Masquer les week-ends (vue semaine)",
+    "Hide weekends (month view)": "Masquer les week-ends (vue mois)"
 }

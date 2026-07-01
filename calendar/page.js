@@ -68,6 +68,42 @@ function getFirstDayOfWeek() {
   return 0; // fallback: Sunday
 }
 
+// Data-driven table of the user-configurable display options exposed in the
+// settings (gear) menu. Each entry is the single source of truth for one
+// toggle:
+//   - key:     the Grist option key it is persisted under (grist.setOption)
+//              and the checkbox `value` in index.html.
+//   - default: value applied when the option has never been set.
+//   - apply:   how the toggle affects the live calendar (handler, enabled).
+// Adding a new toggle = one entry here + one checkbox in index.html
+// (+ its CSS/theme hook). No conditional logic is scattered elsewhere.
+const DISPLAY_OPTIONS = [
+  {
+    key: 'accentToday',
+    default: true,
+    // Colour of "today" is driven by the theme; rebuild it from _display.
+    apply: (h, _on) => h.calendar.setTheme(h._calendarTheme()),
+  },
+  {
+    key: 'neutralWeekends',
+    default: true,
+    // Weekend (Sunday holiday) colouring is driven by a container CSS class,
+    // because ToastUI paints the holiday header with a rule the theme alone
+    // cannot override reliably. Class present => weekends stay neutral.
+    apply: (h, on) => h._container.classList.toggle('neutral-weekends', on),
+  },
+  {
+    key: 'hideWeekendsWeek',
+    default: false,
+    apply: (h, on) => h.calendar.setOptions({week: {workweek: on}}),
+  },
+  {
+    key: 'hideWeekendsMonth',
+    default: false,
+    apply: (h, on) => h.calendar.setOptions({month: {workweek: on}}),
+  },
+];
+
 class CalendarHandler {
   //TODO: switch to new variables once they are published.
   _mainColor =  'var(--grist-theme-input-readonly-border)';
@@ -77,7 +113,15 @@ class CalendarHandler {
   _accentColor =  'var(--grist-theme-accent-text)';
   _textColor =  'var(--grist-theme-text)';
   _selectionColor =  'var(--grist-theme-selection)';
-  _calendarTheme = () => {return {
+  // Current value of each display option, seeded from DISPLAY_OPTIONS defaults
+  // and later overwritten by persisted Grist options in onGristSettingsChanged.
+  _display = Object.fromEntries(DISPLAY_OPTIONS.map(o => [o.key, o.default]));
+  _container = document.getElementById('calendar-container');
+  _calendarTheme = () => {
+    // When "accent today" is on, today's label uses the accent colour;
+    // otherwise it stays the regular text colour.
+    const todayColor = this._display.accentToday ? this._accentColor : this._textColor;
+    return {
     common: {
       backgroundColor: this._calendarBackgroundColor,
       border: this._borderStyle,
@@ -90,7 +134,7 @@ class CalendarHandler {
         color: this._textColor,
       },
       today: {
-        color: this._textColor,
+        color: todayColor,
       },
       saturday:{
         color: this._textColor,
@@ -140,7 +184,7 @@ class CalendarHandler {
         border: '1px solid var(--grist-theme-accent-border)',
       },
       today: {
-        color: this._textColor,
+        color: todayColor,
         backgroundColor: 'inherit',
       },
     },
@@ -223,6 +267,33 @@ class CalendarHandler {
     };
   }
 
+  // Set one display option and apply its effect to the live calendar.
+  setDisplayOption(key, enabled) {
+    const option = DISPLAY_OPTIONS.find(o => o.key === key);
+    if (!option) { return; }
+    this._display[key] = enabled;
+    option.apply(this, enabled);
+  }
+
+  // Apply every display option using the current _display state. Called once at
+  // construction so defaults (e.g. the neutral-weekends class) take effect
+  // before any persisted option arrives.
+  applyDisplayOptions() {
+    for (const option of DISPLAY_OPTIONS) {
+      option.apply(this, this._display[option.key]);
+    }
+  }
+
+  // Mirror the current _display state onto the menu checkboxes.
+  syncMenuCheckboxes() {
+    for (const option of DISPLAY_OPTIONS) {
+      const checkbox = document.querySelector(`#calendar-settings-menu input[value="${option.key}"]`);
+      if (checkbox) {
+        checkbox.checked = this._display[option.key];
+      }
+    }
+  }
+
   constructor() {
     const container = document.getElementById('calendar');
     if (isReadOnly) {
@@ -230,6 +301,8 @@ class CalendarHandler {
     }
     const options = this._getCalendarOptions();
     this.calendar = new tui.Calendar(container, options);
+    this.applyDisplayOptions();
+    this.syncMenuCheckboxes();
 
     // Not sure how to get a reference to this constructor, so doing it in a roundabout way.
     TZDate = this.calendar.getDate().constructor;
@@ -549,6 +622,9 @@ async function translatePage() {
     document.body.querySelectorAll('[data-i18n]').forEach(function (elem) {
       elem.textContent = t(elem.dataset.i18n);
     });
+    document.body.querySelectorAll('[data-i18n-title]').forEach(function (elem) {
+      elem.title = t(elem.dataset.i18nTitle);
+    });
   });
 }
 
@@ -575,8 +651,38 @@ async function calendarViewChanges(radiobutton) {
 function onGristSettingsChanged(options, settings) {
   const view = options?.calendarViewPerspective ?? 'week';
   changeCalendarView(view);
+  // Restore persisted display options (fall back to each option's default).
+  for (const option of DISPLAY_OPTIONS) {
+    const enabled = options?.[option.key] ?? option.default;
+    calendarHandler.setDisplayOption(option.key, enabled);
+  }
+  calendarHandler.syncMenuCheckboxes();
   colTypesFetcher.setAccessLevel(settings.accessLevel);
 };
+
+// When a user toggles a checkbox in the settings menu, apply it and persist it.
+async function displayOptionChanged(checkbox) {
+  const key = checkbox.value;
+  calendarHandler.setDisplayOption(key, checkbox.checked);
+  if (!isReadOnly) {
+    await grist.setOption(key, checkbox.checked);
+  }
+}
+
+// Open/close the settings (gear) dropdown.
+function toggleSettingsMenu() {
+  const menu = document.getElementById('calendar-settings-menu');
+  menu.classList.toggle('hidden');
+}
+
+// Close the settings menu when clicking outside of it.
+document.addEventListener('click', (event) => {
+  const settings = document.getElementById('calendar-settings');
+  const menu = document.getElementById('calendar-settings-menu');
+  if (settings && menu && !settings.contains(event.target)) {
+    menu.classList.add('hidden');
+  }
+});
 
 function changeCalendarView(view) {
   selectRadioButton(view);
