@@ -790,12 +790,11 @@ function applyInitialView() {
   isInitialLoad = false;
   const record = pendingInitialRecord;
   pendingInitialRecord = null;
-  if (isDrivenByLink()) {
-    calendarHandler.selectRecord(record, true);
-  } else {
+  const linked = isDrivenByLink();
+  if (!linked) {
     calendarHandler.calendarToday();
-    calendarHandler.selectRecord(record, false);
   }
+  calendarHandler.selectRecord(record, linked);
 }
 
 // when a user changes the perspective in the GUI, we want to save it as grist option
