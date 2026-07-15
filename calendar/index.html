@@ -51,6 +51,7 @@
 </div>
 </body>
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+<script src="hour-format.js"></script>
 <script src="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.js"></script>
 <script>
   // HACK: Override the time picker format based on locale.
@@ -62,13 +63,10 @@
   // to pass the format down to it, and it can't be done in page.js as the next
   // script grabs the tui.TimePicker reference immediately.
   (function() {
-    var useHour12 = false;
-    try {
-      var culture = new URLSearchParams(window.location.search).get('culture')
-        || navigator.language
-        || 'en';
-      useHour12 = new Intl.DateTimeFormat(culture, {hour: 'numeric'}).resolvedOptions().hour12;
-    } catch(e) {}
+    var culture = new URLSearchParams(window.location.search).get('culture')
+      || navigator.language
+      || 'en';
+    var useHour12 = getHour12(culture); // shared with page.js, see hour-format.js
     tui.TimePicker = class extends tui.TimePicker {
       constructor(container, options) {
         super(container, {

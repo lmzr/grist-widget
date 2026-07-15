@@ -75,17 +75,8 @@ function getLocale() {
   return urlParams.get('culture') ?? navigator.language ?? getLanguage();
 }
 
-// Pure: given a BCP 47 locale tag, returns true when that locale's convention
-// is a 12-hour clock (AM/PM), false for a 24-hour clock. Intl reports this via
-// resolvedOptions().hour12 for an hour-only format.
-function getHour12(locale) {
-  try {
-    return new Intl.DateTimeFormat(locale, {hour: 'numeric'}).resolvedOptions().hour12;
-  } catch (e) {
-    console.warn(`getHour12: cannot resolve hour cycle for locale "${locale}", defaulting to 24h`, e);
-  }
-  return false; // fallback: 24h
-}
+// getHour12(locale) lives in hour-format.js, loaded before this script; it is
+// also used by the inline TimePicker patch in index.html.
 
 class CalendarHandler {
   //TODO: switch to new variables once they are published.
